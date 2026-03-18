@@ -18,4 +18,69 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app)
+const db = getFirestore(app);
+
+// Types
+
+interface DailyStats {
+    date: string
+    keystrokes: number
+    lines: number
+    commits: number
+    xpGained: number
+
+};
+
+// Helpers 
+// ISO: Converts into standardized format "2026-03-17T14:32:45.000Z"
+// split[T]: splits the string at the T (just for yyyy-mm-dd)
+
+const getTodayKey = () => {
+    return new Date().toISOString().split("T")[0];
+};
+
+/*
+    Partial<DailyStats>: all stats not required, just the ones that are updating 
+
+    Access the db and pull out the stats
+    Checks to see if a document is already exists. If it already exists we grab that document. if not fresh 0's on all fields
+    Prevents overwriting of data 
+
+    In the existing data, we overwrite any necessary data in setDoc 
+    ...current spreads the existing data
+    ...stats focuses on only the data updating
+
+*/
+
+export const saveDailyStats = async(stats: Partial<DailyStats>) => {
+    try {
+        const dateKey = getTodayKey();
+        const docRef = doc(db, "stats", dateKey);
+
+        const existing = await getDoc(docRef);
+        const current = existing.exists() ? existing.data() as DailyStats : {
+            date: dateKey,
+            keystrokes: 0,
+            lines: 0,
+            commits: 0,
+            xpGained: 0
+        };
+
+        await setDoc(docRef, {
+            ...current,
+            ...stats,
+            date: dateKey,
+        });
+    } catch (e) {
+        console.error("firebase write error", e);
+    }
+
+
+
+};
+
+export const getStatsHistory = async(days: number = 365) => {
+    try{
+        
+    }
+};
