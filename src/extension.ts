@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { watchForCommits } from "./gitHandler";
 import { getAiSummary } from "./aiSummary";
+import { getStatsHistory } from "./firebaseClient";
 
 const pressesKey = "keypresses";
 const levelKey = "level";
@@ -173,6 +174,13 @@ class BruceViewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+    webviewView.webview.onDidReceiveMessage(async (message) => {
+      if(message.type === "getStats") {
+        const history = await getStatsHistory();
+        this.sendStatsHistory(history);
+      }
+    });
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
@@ -261,6 +269,15 @@ class BruceViewProvider implements vscode.WebviewViewProvider {
         summary: summary,
       });
     }
+  }
+
+  public sendStatsHistory (history: any[]){
+    if(this._view) {
+      this._view.webview.postMessage({
+        type: "statsHistory",
+        history: history
+      });
+    }   
   }
 }
 
