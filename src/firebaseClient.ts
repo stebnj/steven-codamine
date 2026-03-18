@@ -81,6 +81,14 @@ export const saveDailyStats = async(stats: Partial<DailyStats>) => {
 
 export const getStatsHistory = async(days: number = 365) => {
     try{
-        
+        const statsRef = collection(db, "stats");
+        const q = query(statsRef, orderBy("date", "desc"), limit(days));
+        const snapshot = await getDocs(q)
+
+        return snapshot.docs.map(doc => doc.data() as DailyStats);
+    } catch (e){
+        console.error("firebase read error", e);
+        return[];
     }
+
 };
