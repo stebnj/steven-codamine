@@ -6,6 +6,15 @@ import XPBar from "../XPBar/XPBar";
 import LinesWritten from "../LinesWritten/LinesWritten";
 import Stats from "../Stats/statsButton";
 
+
+interface DailyStats {
+  date: string
+  keystrokes: number
+  lines: number
+  commits: number
+  xpGained: number
+}
+
 declare function acquireVsCodeApi(): {
   postMessage: (message: unknown) => void;
   getState: () => unknown;
@@ -17,7 +26,7 @@ const vscode = acquireVsCodeApi();
 function App() {
   const [xp, setXp] = useState(0);
   const [summary, setSummary] = useState("");
-  const [statsHistory, setStatsHistory] = useState<any[]>([]);
+  const [statsHistory, setStatsHistory] = useState<DailyStats[]>([]);
   const [showStats, setShowStats] = useState(false);
 
 
@@ -67,7 +76,7 @@ function App() {
               onClose={() => setShowStats(false)}
               />
         )}
-        <LinesWritten />,
+        <LinesWritten />
       </section>
     </>
   );
