@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { watchForCommits } from "./gitHandler";
 import { getAiSummary } from "./aiSummary";
-import { getStatsHistory } from "./firebaseClient";
+import { getStatsHistory, saveDailyStats } from "./firebaseClient";
 
 const pressesKey = "keypresses";
 const levelKey = "level";
@@ -40,6 +40,8 @@ export function activate(context: vscode.ExtensionContext) {
   watchForCommits(context, (data) => {
     vscode.window.showInformationMessage("Committed: " + data.message);
 
+    saveDailyStats({commits: 1})
+
     console.log("Diff content: " + data);
 
     getAiSummary(data.diff)
@@ -72,12 +74,12 @@ export function activate(context: vscode.ExtensionContext) {
       `${uriString}.${timestampKey}`,
     );
     const locDate: Date | undefined =
-      locTimestamp == undefined ? undefined : new Date(locTimestamp);
+      locTimestamp === undefined ? undefined : new Date(locTimestamp);
 
     if (
-      locDate == undefined ||
-      locDate.getDate() != currentTime.getDate() ||
-      locDate.getFullYear() != currentTime.getFullYear()
+      locDate === undefined ||
+      locDate.getDate() !== currentTime.getDate() ||
+      locDate.getFullYear() !== currentTime.getFullYear()
     ) {
       context.workspaceState.update(
         `${uriString}.${timestampKey}`,
@@ -96,6 +98,9 @@ export function activate(context: vscode.ExtensionContext) {
    * 6. Add up the progress (current - initial) for each document in the workspace
    * 7. Send the total progress (total lines of code written in project today) to webview
    */
+
+  let saveTimeout: NodeJS.Timeout | undefined;
+
   vscode.workspace.onDidChangeTextDocument(
     (e: vscode.TextDocumentChangeEvent) => {
       const currentWorkspacePresses: number =
@@ -108,6 +113,8 @@ export function activate(context: vscode.ExtensionContext) {
 
       const xp = (currentWorkspacePresses + 1) / 10;
       const level: number = context.workspaceState.get(levelKey) ?? 1;
+
+
 
       provider.sendXPMessage(xp);
       if (xp >= xpForLevel(level + 1)) {
@@ -149,6 +156,18 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       provider.sendNumLinesMessage(totalLoc);
+
+      if(saveTimeout) {
+        clearTimeout(saveTimeout);
+      } 
+
+      saveTimeout = setTimeout(() => {
+        saveDailyStats({
+          keystrokes: currentWorkspacePresses + 1,
+          xpGained: xp,
+          lines: totalLoc
+        });
+      }, 30000);
     },
   );
 
@@ -203,7 +222,7 @@ class BruceViewProvider implements vscode.WebviewViewProvider {
             style-src ${webview.cspSource} 'unsafe-inline';                                 
             img-src ${webview.cspSource} data: vscode-webview-resource:;                    
             script-src 'nonce-${nonce}' 'unsafe-eval' ${webview.cspSource};                 
-            connect-src http://127.0.0.1:3001 http://localhost:3001;">                      
+            connect-src http://127.0.0.1:3001 http://localhost:3001 https://*.googleapis.com https://*.firebaseio.com;">                      
     <meta name="viewport" content="width=device-width, initial-scale=1.0">                   
     <link href="${styleUri}" rel="stylesheet">                                               
     <title>Brucey Loosey</title>                                                             
