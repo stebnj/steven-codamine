@@ -4,7 +4,7 @@ import Arsen from "../ForArsen/Arsen";
 import { useState, useEffect } from "react";
 import XPBar from "../XPBar/XPBar";
 import LinesWritten from "../LinesWritten/LinesWritten";
-import Stats from "../Stats/statsButton";
+import Stats from "../Stats/StatsButton";
 
 
 interface DailyStats {
