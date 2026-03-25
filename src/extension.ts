@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { watchForCommits } from "./gitHandler";
 import { getAiSummary } from "./aiSummary";
-import { getStatsHistory, saveDailyStats } from "./firebaseClient";
+import { getStatsHistory, incrementCommits, saveDailyStats } from "./firebaseClient";
 
 const pressesKey = "keypresses";
 const levelKey = "level";
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
   watchForCommits(context, (data) => {
     vscode.window.showInformationMessage("Committed: " + data.message);
 
-    saveDailyStats({commits: 1})
+   incrementCommits();
 
     console.log("Diff content: " + data);
 
@@ -167,7 +167,7 @@ export function activate(context: vscode.ExtensionContext) {
           xpGained: xp,
           lines: totalLoc
         });
-      }, 30000);
+      }, 5000);
     },
   );
 

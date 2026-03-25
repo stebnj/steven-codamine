@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs, increment } from "firebase/firestore";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -91,4 +91,10 @@ export const getStatsHistory = async(days: number = 365) => {
         return[];
     }
 
+};
+
+export const incrementCommits = async () => {
+    const dateKey = getTodayKey();
+    const docRef = doc(db, "stats", dateKey);
+    await setDoc(docRef, {commits: increment(1), date: dateKey}, {merge: true });
 };
